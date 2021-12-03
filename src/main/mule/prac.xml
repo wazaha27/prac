@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="633b4c9e-9d8d-46b6-a5d4-99081fca3d71" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="e778af7a-0754-4054-bcb1-53f5dfac2794" >
+		<db:my-sql-connection host="sql6.freemysqlhosting.net" port="3306" user="sql6456062" password="dd3TK5VnpY" database="sql6456062"/>
+	</db:config>
+	<flow name="pracFlow" doc:id="03c79c1c-2019-402d-a0c6-c9f8f96a18e0" >
+		<http:listener doc:name="Listener" doc:id="3432f713-e51b-4fc2-aca7-fa46a1e9bb60" config-ref="HTTP_Listener_config" path="/get"/>
+		<db:select doc:name="Select" doc:id="b472161f-32ed-4561-803a-466871d0156b" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from agf_sql]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="9c227350-0b8e-45d5-b45f-88e7b8bc490f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="f9b6c2b3-ac5e-4246-9df4-0fe479ad2a05" message='"sucess:"'/>
+	</flow>
+	<flow name="pracFlow1" doc:id="504531a6-e8f5-4af1-9c3c-56ecdf87ed92" >
+		<http:listener doc:name="Listener" doc:id="c94ab786-f8ac-4af3-b365-6f914642aec3" config-ref="HTTP_Listener_config" path="/{getID}"/>
+		<set-variable value="#[attributes.uriParams.getID]" doc:name="id" doc:id="5f48ba81-b2f2-4a5f-a5ab-61efdb8b7aa8" variableName="id"/>
+		<db:select doc:name="Select" doc:id="152ad7dd-b42d-4005-b0d5-1c6767706da4" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from agf_sql where id = :id]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{ "id" : vars.id}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="fc10366e-67a4-4b61-b9e5-ca2a2bf68c64" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="e711d790-f4b2-4199-8a78-4c076f825ccf" message='"sucess"'/>
+	</flow>
+	<flow name="pracFlow2" doc:id="6255d8a4-04a6-4e2d-b0fb-8d13fa0834fb" >
+		<http:listener doc:name="Listener" doc:id="984e0127-9b9c-43b8-9165-b41d51199ee2" config-ref="HTTP_Listener_config" path="/post"/>
+		<db:insert doc:name="Insert" doc:id="dc71a78b-c00a-40d5-bd63-ede24637b1fb" config-ref="Database_Config">
+			<db:sql ><![CDATA[insert into agf_sql (name, id, age) VALUES (:name, :id, :age);]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{"name": payload.name, "id": payload.id, "age": payload.age}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Transform Message" doc:id="83158333-7660-4cdc-bacd-867b806acb85" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
